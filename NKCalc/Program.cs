@@ -62,10 +62,20 @@ class Program {
         };
         
         void UpdateDisplay() {
-            eq.Content = s;
+            eq.Content = string.IsNullOrEmpty(s) ? "0" : s;
         }
 
+        char[] allowedFirstChars = ['(', '.', '-'];
         void Append(string token) {
+            if (s.Length == 0 && !char.IsDigit(token[0]) && !allowedFirstChars.Contains(token[0]))
+                return;
+
+            if (token[0] == '.') {
+                var lastNumber = s.Split('+','-','*','/','%','(',')').Last();
+                if (lastNumber.Contains('.') || s.EndsWith('.'))
+                    return;
+            }
+            
             s += token;
             UpdateDisplay();
         }
@@ -77,7 +87,7 @@ class Program {
 
         void Delete() {
             if (s.Length > 0) {
-                s = s.Substring(0, s.Length - 1);
+                s = s[..^1];
                 UpdateDisplay();
             }
         }
@@ -103,6 +113,10 @@ class Program {
             if (string.IsNullOrEmpty(s)) return;
             try {
                 double result = new Evaluator().Parse(s);
+                
+                if (double.IsInfinity(result) || double.IsNegativeInfinity(result) || double.IsNaN(result))
+                    throw new DivideByZeroException();
+                
                 s = result.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 UpdateDisplay();
             } catch {
